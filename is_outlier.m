@@ -17,5 +17,5 @@ function [av]=is_outlier(FF)
     end    
     max(G)
     rejection_val
-    av;
+    av=av';
  end

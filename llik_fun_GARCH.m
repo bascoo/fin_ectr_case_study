@@ -20,7 +20,7 @@ end
 %% Calculate Log Likelihood Values
 
 %construct sequence of log lik contributions
-l = -(1/2)*log(2*pi) - (1/2)*log(sig(1:T)) - (1/2)*(x').^2./sig(1:T);
+l = -(T/2)*log(2*pi) - (1/2)*log(sig(1:T)) - (1/2)*(x').^2./sig(1:T);
 
 % mean log likelihood
 llik =mean(l);
