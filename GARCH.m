@@ -19,8 +19,8 @@ plot(r, 'r')
 
 %% 0. Test For outliers
 
-price_outliers = is_outlier(p);
-return_outliers = is_outlier(r);
+price_outliers = is_outlier(p); % returns an array of 0's and 1's
+return_outliers = is_outlier(r); % if 1: that value is an outlier
 
 %count outliers
 count_p_outliers = 0; % initiate counter
@@ -40,59 +40,57 @@ end
 
 
 %% 1. Setup
-      
+
     x = y*1000;
-    %Look at last i variables
-    i = 500;
-    x = x(end-i:end);
+    n = 500; %Look at last n variables
+    x = x(end-(n-1):end);
 %     percntiles = prctile(x,[5 95]); %5th and 95th percentile
 %     outlierIndex = x < percntiles(1) | x > percntiles(2);
 %     %remove outlier values
 %     x(outlierIndex) = [];
+    T = length(x); % sample size
 
-    T=length(x); % sample size
-
-%% 2. Parameter Values
-
-      omega=0.1;
-      alpha=0.1;
-      beta=0.98;
-      
-%% 3. Define Vectors
-
-      sigma=zeros(1,T); 
-      
-%% 4. Filter Volatility
-
-      sigma(1)=var(x); %initialize volatility at unconditional variance
-
-      for t=1:T
-          
-          sigma(t+1) = omega + alpha*x(t)^2 + beta*sigma(t);
-                  
-      end
-      
-%% 5. Calculate Log Likelihood Values
-
-      %construct sequence of log lik contributions
-      l = -(1/2)*log(2*pi) - (1/2)*log(sigma(1:T)) - (1/2)*(x').^2./sigma(1:T); 
-      
-      %calculate average log likelihood
-      L = mean(l);
-      
-     
-%% 6. Plots
-figure()
-subplot(2,1,1)
-plot(x,'k')      % plot data
-hold on
-plot(sigma,'r')    %plot filtered volatility
-xlim([1 T])
-
-subplot(2,1,2)
-plot(l)             %plot individual loglikelihood contributions
-line([1 T], [L L])  %draw line of average log likelihood
-xlim([1 T])
+% %% 2. Parameter Values
+% 
+%       omega=0.1;
+%       alpha=0.1;
+%       beta=0.98;
+%       
+% %% 3. Define Vectors
+% 
+%       sigma=zeros(1,T); 
+%       
+% %% 4. Filter Volatility
+% 
+%       sigma(1)=var(x); %initialize volatility at unconditional variance
+% 
+%       for t=1:T
+%           
+%           sigma(t+1) = omega + alpha*x(t)^2 + beta*sigma(t);
+%                   
+%       end
+%       
+% %% 5. Calculate Log Likelihood Values
+% 
+%       %construct sequence of log lik contributions
+%       l = -(1/2)*log(2*pi) - (1/2)*log(sigma(1:T)) - (1/2)*(x').^2./sigma(1:T); 
+%       
+%       %calculate average log likelihood
+%       L = mean(l);
+%       
+%      
+% %% 6. Plots
+% figure()
+% subplot(2,1,1)
+% plot(x,'k')      % plot data
+% hold on
+% plot(sigma,'r')    %plot filtered volatility
+% xlim([1 T])
+% 
+% subplot(2,1,2)
+% plot(l)             %plot individual loglikelihood contributions
+% line([1 T], [L L])  %draw line of average log likelihood
+% xlim([1 T])
 
 
 % %% 1. Setup ML
