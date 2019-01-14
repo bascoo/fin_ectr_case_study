@@ -16,8 +16,28 @@ y               = r - mean_r;
 plot(p, 'b')
 hold on
 plot(r, 'r')
-% hold on
-% plot(y, 'k')
+
+%% 0. Test For outliers
+
+price_outliers = is_outlier(p);
+return_outliers = is_outlier(r);
+
+%count outliers
+count_p_outliers = 0; % initiate counter
+count_r_outliers = 0; % initiate counter
+
+for i = 1 : length(price_outliers)
+    if price_outliers(i) == 1;
+        count_p_outliers = count_p_outliers + 1; 
+    end
+end
+
+for i = 1 : length(return_outliers) % extra loop due to length difference
+    if return_outliers(i) == 1;
+        count_r_outliers = count_r_outliers + 1; 
+    end
+end
+
 
 %% 1. Setup
       
@@ -40,22 +60,22 @@ plot(r, 'r')
       
 %% 3. Define Vectors
 
-      sig=zeros(1,T); 
+      sigma=zeros(1,T); 
       
 %% 4. Filter Volatility
 
-      sig(1)=var(x); %initialize volatility at unconditional variance
+      sigma(1)=var(x); %initialize volatility at unconditional variance
 
       for t=1:T
           
-          sig(t+1) = omega + alpha*x(t)^2 + beta*sig(t);
+          sigma(t+1) = omega + alpha*x(t)^2 + beta*sigma(t);
                   
       end
       
 %% 5. Calculate Log Likelihood Values
 
       %construct sequence of log lik contributions
-      l = -(1/2)*log(2*pi) - (1/2)*log(sig(1:T)) - (1/2)*(x').^2./sig(1:T); 
+      l = -(1/2)*log(2*pi) - (1/2)*log(sigma(1:T)) - (1/2)*(x').^2./sigma(1:T); 
       
       %calculate average log likelihood
       L = mean(l);
@@ -66,7 +86,7 @@ figure()
 subplot(2,1,1)
 plot(x,'k')      % plot data
 hold on
-plot(sig,'r')    %plot filtered volatility
+plot(sigma,'r')    %plot filtered volatility
 xlim([1 T])
 
 subplot(2,1,2)
