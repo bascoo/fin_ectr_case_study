@@ -3,7 +3,11 @@ clc
 
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
-datetime        = table2array(table(:,1));
+datetime        = char(table2array(table(:,1)));
+dates           = datetime(:,1:10);
+times           = datetime(:,11:19);
+dates           = char_to_string(dates); 
+times           = char_to_string(times);
 netflixPrice    = table2array(table(:,2)); 
 
 %%
@@ -19,17 +23,23 @@ plot(r, 'r')
 
 %% 0. Test For outliers (GRUBBS TEST, ASSUMES NORMAL DISTR) 
 
-price_outliers = is_outlier(p); % returns an array of 0's and 1's
-return_outliers = is_outlier(r); % if 1: that value is an outlier
+price_outliers                      = is_outlier(p); % returns an array of 0's and 1's
+return_outliers                     = is_outlier(r); % if 1: that value is an outlier
+barndorff_nielsen_price_outliers    = is_barndorff_nielsen_outlier(p); 
 
 %count outliers
-count_p_outliers = 0; % initiate counter
-count_r_outliers = 0; % initiate counter
+count_p_outliers                    = 0; % initiate counter
+count_r_outliers                    = 0; % initiate counter
+count_barndorff_nielsen_p_outliers  = 0; %initiate counter
 
 for i = 1 : length(price_outliers)
     if price_outliers(i) == 1;
         count_p_outliers = count_p_outliers + 1; 
     end
+    
+    if barndorff_nielsen_price_outliers(i) == 1;
+        count_barndorff_nielsen_p_outliers  = count_barndorff_nielsen_p_outliers + 1; 
+    end    
 end
 
 for i = 1 : length(return_outliers) % extra loop due to length difference
@@ -37,6 +47,10 @@ for i = 1 : length(return_outliers) % extra loop due to length difference
         count_r_outliers = count_r_outliers + 1; 
     end
 end
+
+%% 0.1 FIND Realised volatility
+
+
 
 %% 1. Setup
 
@@ -89,22 +103,18 @@ end
     alpha_hat   = theta_hat_normal_GARCH(2);
     beta_hat    = theta_hat_normal_GARCH(3);
     
-    epsilon             = normrnd(0,1,[T,1]); 
     filtered_sigma      = zeros([T,1]);
     filtered_sigma(1)   = omega_hat / (1 - alpha_hat - beta_hat);
     
     for i = 2 : T
        filtered_sigma(i) = omega_hat + alpha_hat * x(i-1)^2 + beta_hat * filtered_sigma(i-1);
     end    
-
-    y_hat = sqrt(filtered_sigma) .* epsilon;
+    
 %% 6. Plot 
 
     figure(3) 
 
-    plot(x, 'k')
-    hold on
-    plot(y_hat, 'r')
+    plot(filtered_sigma, 'r')
 
 %% 3. Estimate values using ML     
     
