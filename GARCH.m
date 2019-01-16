@@ -1,6 +1,7 @@
 clear all 
 clc
 
+%% Load Data
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
 datetime        = char(table2array(table(:,1)));
@@ -50,7 +51,20 @@ end
 
 %% 0.1 FIND Realised volatility
 
+r_adjusted      = [0; r];   % first return = 0 so array sizes match
+date_check      = dates(1); % initialize at first date of series
+number_of_days  = size(unique(dates)); % Find number of different days in sample
+RV              = zeros([number_of_days,1]); %initialize array voor Realized Volatility
+day_counter = 1; 
 
+for i = 1 : length(r_adjusted)
+    if date_check == dates(i)
+        RV(day_counter) = RV(day_counter) + r_adjusted(i)^2; 
+    else 
+        day_counter = day_counter + 1; 
+        date_check  = dates(i);
+    end      
+end    
 
 %% 1. Setup
 
