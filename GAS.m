@@ -2,7 +2,7 @@ clc
 clear all
 close all
 
-tic
+tic % start counter
 
 %% Input choices
 % #### Distribution
@@ -22,7 +22,7 @@ load_data = readtable('netflix_resampled_5minutes.csv');
 vY = table2array(load_data(:,2))';
 
 %% Input choices
-iDistr = GAUSS; % Gaussian distribution
+iDistr = STUD_T; % Gaussian distribution
 iLinkfunc = LOG_SIGMA; % Link function Log Sigma:  f_t =log(sigma^2_t) 
 iScaling = INV_FISHER; % Inverse fisher scaling matrix
 
@@ -51,7 +51,7 @@ fprintf ('Log Likelihood value = %g \r', -dloglik*cT)
 [vpplot, vse] = StandardErrors(objfun, vp_mle, cT, vinput, vY);
 horzcat(aparnames, num2cell(horzcat(vpplot, vse)))
 PlotSeries(vp_mle, vinput, vY, cT);
-toc
+toc % end counter
 
 
 
