@@ -16,6 +16,7 @@ netflixPrice    = table2array(table(:,2));
 p               = log(netflixPrice); % log price
 r               = diff(p);           % log return
 mean_r          = mean(r); 
+r_adjusted      = [0; r];   % first return = 0 so array sizes match
 y               = r - mean_r;
 
 plot(p, 'b')
@@ -51,20 +52,25 @@ end
 
 %% 0.1 FIND Realised volatility
 
-r_adjusted      = [0; r];   % first return = 0 so array sizes match
 date_check      = dates(1); % initialize at first date of series
-number_of_days  = size(unique(dates)); % Find number of different days in sample
+number_of_days  = size(unique(dates),1); % Find number of different days in sample
 RV              = zeros([number_of_days,1]); %initialize array voor Realized Volatility
-day_counter = 1; 
+day_counter     = 1; % initialize day counter
 
 for i = 1 : length(r_adjusted)
     if date_check == dates(i)
         RV(day_counter) = RV(day_counter) + r_adjusted(i)^2; 
     else 
-        day_counter = day_counter + 1; 
-        date_check  = dates(i);
+        day_counter     = day_counter + 1;
+        RV(day_counter) = r_adjusted(i)^2;
+        date_check      = dates(i);
     end      
-end    
+end   
+
+%% 0.2 find daily returns
+
+r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
+r_daily_close_to_close  = find_r_close_to_close(p, dates); 
 
 %% 1. Setup
 
