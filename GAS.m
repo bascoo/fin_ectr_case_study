@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 clc
 clear all
 close all
@@ -12,21 +9,45 @@ tic % start counter
 GAUSS = 0; % Gaussian
 STUD_T = 1; % Student-t
 % ##### Link function
-SIGMA = 2;
+SIGMA = 2; 
 LOG_SIGMA = 3;
 % ##### Scaling of score
 INV_FISHER = 4; %Inverse fisher
 INV_SQRT_FISHER = 5; % Inverse sqrt fisher
-% ##### Standard errors
-HESS = 6;
-SAND = 7;
+% ##### Standard error type
+HESS = 6; % Hessian
+SAND = 7; % Sandwich estimator
 %% load data
-load_data = readtable('netflix_resampled_5minutes.csv');
-vY = table2array(load_data(:,2))';
+table           = readtable('netflix_resampled_5minutes.csv');
+datetime        = char(table2array(table(:,1)));
+dates           = datetime(:,1:10);
+times           = datetime(:,11:19);
+dates           = char_to_string(dates);
+times           = char_to_string(times);
+netflixPrice    = table2array(table(:,2));
+p               = log(netflixPrice); % log price
+r               = diff(p);           % log return 
+r_adjusted      = [0; r];   % first return = 0 so array sizes match
+
+%% Daily returns
+r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
+r_daily_close_to_close  = find_r_close_to_close(p, dates); 
+
+%% input data for model daily
+DailyData = 1; % 1 = open/close, 2 = close/close
+
+if DailyData == 1
+    vY = r_daily_open_to_close';
+elseif DailyData == 2
+    vY = r_daily_close_to_close';
+else
+    error('Specify daily data type');
+end
+
 
 %% Input choices
 iDistr = STUD_T; % Gaussian distribution
-iLinkfunc = LOG_SIGMA; % Link function Log Sigma:  f_t =log(sigma^2_t)
+iLinkfunc = LOG_SIGMA; % Link function Log Sigma:  f_t =log(sigma^2_t) 
 iScaling = INV_FISHER; % Inverse fisher scaling matrix
 
 % Order of GAS(p,q)
@@ -37,10 +58,10 @@ iStdErr = HESS;
 
 %% Starting values
 dOmega = 0;
-vA = 0.10;
+vA = 0.10; 
 vB = 0.89;
 dMu = 0;
-dDf = 5; % only relevant if distr = student-t
+dDf = 5; % degrees of freedom, only relevant if distr = student-t
 
 %% Work
 cT = size(vY,2);
@@ -61,4 +82,3 @@ toc % end counter
 
 
 
->>>>>>> b825908be74872f0836b5106e485dae5af92baca

@@ -7,8 +7,12 @@ iq = vinput(5);
 istderr = vinput(6);
 cT = size(vy, 2);
 dloglik = 0;
-vf = zeros(1, cT); vscore = zeros(1, cT); vscaledsc = zeros(1, cT);
+vf = zeros(1, cT); 
+vscore = zeros(1, cT); 
+vscaledsc = zeros(1, cT);
+
 [domega, vA, vB, dmu, ddf] = TransformPar(vp, ilinkfunction, idistribution, ip, iq);
+
 imaxpq = max(ip, iq);
 vf(1:imaxpq) = domega/(1 - sum(vB)); % Unconditional mean of factor f
 [vf, vscore, vscaledsc] = Init(vf, vscore, vscaledsc, dmu, imaxpq, ddf, ilinkfunction, vy, idistribution, iscalingchoice); 
@@ -78,10 +82,10 @@ if idistribution == 0     %GAUSS
 	dscore = (dy^2-dsigma2_t)/(2*dsigma2_t^2);
 	dinvfisher = 2*dsigma2_t^2;
 	dllik = -log(dsigma2_t)/2 - dy^2/(2*dsigma2_t);
-elseif idistribution == 1    %STUD_T
+elseif idistribution == 1    %STUD_T 
 	dw = (1 + (dy^2/((ddf-2)*dsigma2_t)))^-1*((ddf+1)/(ddf-2));	
 	dscore = dw*dy^2/(2*dsigma2_t^2) - 1/(2*dsigma2_t);
-	dinvfisher = (2*dsigma2_t^2*(ddf+3))/ddf;
+	dinvfisher = (2*dsigma2_t^2*(ddf+3))/ddf; 
 	dllik = log(gamma((ddf+1)/2)) - log(gamma(ddf/2)) - log((ddf-2)*pi)/2 - log(dsigma2_t)/2 - ((ddf+1)/2)*log(1+(dy^2/((ddf-2)*dsigma2_t)));
 else 
     error('Specify correct distribution type');
@@ -89,7 +93,7 @@ end
 if ilinkfunction == 3 %LOG_SIGMA
 	dscore = dscore*dsigma2_t; % Apply chain rule
 	dinvfisher = dinvfisher/dsigma2_t^2;
-end
+end 
 end
 
 
