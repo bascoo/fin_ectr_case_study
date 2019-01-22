@@ -1,8 +1,0 @@
-%%detect entries in which price deviates by more than 
-%%10 mean absolute deviations from rolling centered median (t-25:t+25) 
-function [av]=is_barndorff_nielsen_outlier(FF)
-    for i = 1 : 25 % Do first 25 observations
-        
-    end     
-    av;
- end
