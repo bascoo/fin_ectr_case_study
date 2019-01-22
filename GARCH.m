@@ -26,8 +26,8 @@ plot(r, 'r')
 %% 0. Test For outliers (GRUBBS TEST, ASSUMES NORMAL DISTR)
 
 price_outliers                      = is_outlier(p); % returns an array of 0's and 1's
-return_outliers                     = is_outlier(r); % if 1: that value is an outlier
-barndorff_nielsen_price_outliers    = is_barndorff_nielsen_outlier(p);
+return_outliers                     = is_outlier(r); % if 1: that value is grubbs outlier outlier
+barndorff_nielsen_price_outliers    = is_barndorff_nielsen_outlier(p); %find outliers as described by Barndorff-nielsen
 
 %count outliers
 count_p_outliers                    = 0; % initiate counter
@@ -74,7 +74,7 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 
 %% 1. Setup
 
-    x = y*1000;
+    x = (r_daily_open_to_close - mean(r_daily_open_to_close)*1000;
     n = 500; %Look at last n variables
     x = x(end-(n-1):end);
 %     percntiles = prctile(x,[5 95]); %5th and 95th percentile
