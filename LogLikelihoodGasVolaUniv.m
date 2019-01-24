@@ -5,12 +5,12 @@ iscalingchoice = vinput(3);
 ip = vinput(4);
 iq = vinput(5);
 istderr = vinput(6);
+iDP = vinput(7);
 cT = size(vy, 2);
 dloglik = 0;
 vf = zeros(1, cT); 
 vscore = zeros(1, cT); 
 vscaledsc = zeros(1, cT);
-
 [domega, vA, vB, dmu, ddf] = TransformPar(vp, ilinkfunction, idistribution, ip, iq);
 
 imaxpq = max(ip, iq);
@@ -29,7 +29,8 @@ for t = imaxpq+1:cT
         vfunc(t-imaxpq) = dllik; 
     end
     vscore(t) = dscore;   
-    if t < 1000 % Stop estimating till datapoint 1000
+%% stop estimating till datapoint     
+    if t < iDP 
 	dloglik = dloglik + dllik;
     end
 	dscale = Scaling(dinvfisher, iscalingchoice);

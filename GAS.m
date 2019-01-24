@@ -2,19 +2,18 @@ clc
 clear all
 close all
 
-tic % start counter
-
+tic 
 %% load data
-table           = readtable('netflix_resampled_5minutes.csv');
-datetime        = char(table2array(table(:,1)));
-dates           = datetime(:,1:10);
-times           = datetime(:,11:19);
-dates           = char_to_string(dates);
-times           = char_to_string(times);
-netflixPrice    = table2array(table(:,2));
-p               = log(netflixPrice); % log price
-r               = diff(p);           % log return 
-r_adjusted      = [0; r];   % first return = 0 so array sizes match
+table                   = readtable('netflix_resampled_5minutes.csv');
+datetime                = char(table2array(table(:,1)));
+dates                   = datetime(:,1:10);
+times                   = datetime(:,11:19);
+dates                   = char_to_string(dates);
+times                   = char_to_string(times);
+netflixPrice            = table2array(table(:,2));
+p                       = log(netflixPrice); % log price
+r                       = diff(p);           % log return 
+r_adjusted              = [0; r];   % first return = 0 so array sizes match
 
 %% Daily returns
 r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
@@ -49,13 +48,13 @@ elseif DailyData == 2
 else
     error('Specify daily data type');
 end
-
+%% Input datapoint (estimate coefficients till this point)
+iDatapoint  = 1500; % sample days 
 
 %% Input choices
 iDistr      = STUD_T; % Gaussian distribution
 iLinkfunc   = LOG_SIGMA; % Link function Log Sigma:  f_t =log(sigma^2_t) 
 iScaling    = INV_FISHER; % Inverse fisher scaling matrix
-
 % Order of GAS(p,q)
 iP = 1;
 iQ = 1;
@@ -71,7 +70,7 @@ dDf     = 5; % degrees of freedom, only relevant if distr = student-t
 
 %% Work
 cT                  = size(vY,2);
-vinput              = [iDistr; iLinkfunc; iScaling; iP; iQ; iStdErr];
+vinput              = [iDistr; iLinkfunc; iScaling; iP; iQ; iStdErr; iDatapoint];
 vp0                 = [dOmega; vA; vB; dMu; dDf];
 [vp0, aparnames]    = StartingValues(vinput, vp0);
 options             = optimset('TolX', 0.0001, 'Display', 'iter', 'Maxiter', 5000, 'MaxFunEvals', 5000, 'LargeScale', 'off', 'HessUpdate', 'bfgs');
@@ -84,6 +83,6 @@ fprintf ('Log Likelihood value = %g \r', -dloglik*cT)
 horzcat(aparnames, num2cell(horzcat(vpplot, vse)))
 [ts1, ts2, ts3]     = PlotSeries(vp_mle, vinput, vY, cT);
 
-toc % end counter
+toc
 
 
