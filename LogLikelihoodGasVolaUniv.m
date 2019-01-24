@@ -28,8 +28,10 @@ for t = imaxpq+1:cT
     if(istderr == 7)  %SAND
         vfunc(t-imaxpq) = dllik; 
     end
-    vscore(t) = dscore;
+    vscore(t) = dscore;   
+    if t < 1000 % Stop estimating till datapoint 1000
 	dloglik = dloglik + dllik;
+    end
 	dscale = Scaling(dinvfisher, iscalingchoice);
 	vscaledsc(t) = dscale*dscore;
 end
