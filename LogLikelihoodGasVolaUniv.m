@@ -37,6 +37,8 @@ if(idistribution == 0) %GAUSS
     dloglik = double((-log(2*pi)*(cT-imaxpq)/2 + dloglik)/cT);
 elseif(idistribution == 1) %STUD_T
     dloglik = double(dloglik/cT);
+elseif(idistribution == 99) %SKEWED STUDENT-T
+    
 end
 if(isfinite(dloglik) == 0 || isreal(dloglik) == 0 || sum(vB) > 1)
     dloglik = -100;
