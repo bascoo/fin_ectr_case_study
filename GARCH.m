@@ -4,18 +4,24 @@ clc
 %% Load Data
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
+
+load('Daily_realized_kernel.mat');  % load realized kernel
+load('datelist_all_trading_days.mat'); % stores 'Full_date_list'
+
+Realized_kernel = All_rk;           % Struct is saved as all_rk, store as Realized_kernel
 datetime        = char(table2array(table(:,1)));
 dates           = datetime(:,1:10);
 times           = datetime(:,11:19);
 dates           = char_to_string(dates);
 times           = char_to_string(times);
 netflixPrice    = table2array(table(:,2));
+clear table % reduce workspace burden
 
 %%
 
 p               = log(netflixPrice); % log price
 r               = diff(p);           % log return 
-r_adjusted      = [0; r];   % first return = 0 so array sizes match
+r_adjusted      = [0; r];            % first return = 0 so array sizes match
 mean_r          = mean(r);
 y               = r - mean_r;
 
@@ -67,6 +73,15 @@ for i = 1 : length(r_adjusted)
     end      
 end   
 
+%% Plot RV and RK
+
+figure(2)
+plot(RV)
+hold on
+plot(Realized_kernel, 'r')
+axis tight
+ylim([0 0.025])
+
 %% 0.2 find daily returns
 
 r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
@@ -74,7 +89,7 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 
 %% 1. Setup
 
-    x = (r_daily_open_to_close - mean(r_daily_open_to_close)*1000;
+    x = (r_daily_open_to_close - mean(r_daily_open_to_close))*1000;
     n = 500; %Look at last n variables
     x = x(end-(n-1):end);
 %     percntiles = prctile(x,[5 95]); %5th and 95th percentile
