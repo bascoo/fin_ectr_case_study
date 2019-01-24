@@ -23,16 +23,13 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 % #### Distribution
 GAUSS           = 0; % Gaussian
 STUD_T          = 1; % Student-t
-SKWD_T          = 99; % Skewed-t
-
+SKWD_T          = 99; % Skewed-t (not working yet)
 % ##### Link function
 SIGMA           = 2; 
 LOG_SIGMA       = 3;
-
 % ##### Scaling of score
 INV_FISHER      = 4; %Inverse fisher
 INV_SQRT_FISHER = 5; % Inverse sqrt fisher
-
 % ##### Standard error type
 HESS            = 6; % Hessian
 SAND            = 7; % Sandwich estimator
@@ -41,13 +38,13 @@ SAND            = 7; % Sandwich estimator
 % 1 = open/close, 2 = close/close
 DailyData = 1;
 
-if DailyData == 1
-    vY = r_daily_open_to_close';
-elseif DailyData == 2
-    vY = r_daily_close_to_close';
-else
-    error('Specify daily data type');
-end
+    if DailyData == 1
+         vY = r_daily_open_to_close';
+    elseif DailyData == 2
+         vY = r_daily_close_to_close';
+    else
+        error('Specify daily data type');
+    end
 %% Input datapoint (estimate coefficients till this point)
 iDatapoint  = 1500; % sample days 
 
@@ -56,17 +53,17 @@ iDistr      = STUD_T; % Gaussian distribution
 iLinkfunc   = LOG_SIGMA; % Link function Log Sigma:  f_t =log(sigma^2_t) 
 iScaling    = INV_FISHER; % Inverse fisher scaling matrix
 % Order of GAS(p,q)
-iP = 1;
-iQ = 1;
+iP          = 1;
+iQ          = 1;
 % Standard errors: Hessian
 iStdErr     = HESS;
 
 %% Starting values
-dOmega  = 0;
-vA      = 0.10; 
-vB      = 0.89;
-dMu     = 0;
-dDf     = 5; % degrees of freedom, only relevant if distr = student-t
+dOmega      = 0;
+vA          = 0.10; 
+vB          = 0.89;
+dMu         = 0;
+dDf         = 5; % degrees of freedom, only relevant if distr = student-t
 
 %% Work
 cT                  = size(vY,2);
@@ -78,9 +75,16 @@ objfun              = @(vp)(-LogLikelihoodGasVolaUniv(vp, vinput, vY));
 [vp_mle, dloglik]   = fminunc(objfun, vp0, options);
 
 fprintf ('Log Likelihood value = %g \r', -dloglik*cT)
+fprintf ('Datapoint = %g \r', iDatapoint)
 
 [vpplot, vse]       = StandardErrors(objfun, vp_mle, cT, vinput, vY);
-horzcat(aparnames, num2cell(horzcat(vpplot, vse)))
+vTstat = zeros(5,1);
+for i = 1:5
+    vTstat(i) = vpplot(i)/vse(i);
+end
+vTstat(:, all(~vTstat,1))=[];
+test = ["","beta","SE","T-stat"];
+vertcat(num2cell(test),horzcat(aparnames, num2cell(horzcat(vpplot, vse,vTstat))))
 [ts1, ts2, ts3]     = PlotSeries(vp_mle, vinput, vY, cT);
 
 toc
