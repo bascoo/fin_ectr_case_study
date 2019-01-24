@@ -5,12 +5,12 @@ iscalingchoice = vinput(3);
 ip = vinput(4);
 iq = vinput(5);
 istderr = vinput(6);
+iDP = vinput(7);
 cT = size(vy, 2);
 dloglik = 0;
 vf = zeros(1, cT); 
 vscore = zeros(1, cT); 
 vscaledsc = zeros(1, cT);
-
 [domega, vA, vB, dmu, ddf] = TransformPar(vp, ilinkfunction, idistribution, ip, iq);
 
 imaxpq = max(ip, iq);
@@ -28,8 +28,11 @@ for t = imaxpq+1:cT
     if(istderr == 7)  %SAND
         vfunc(t-imaxpq) = dllik; 
     end
-    vscore(t) = dscore;
+    vscore(t) = dscore;   
+%% stop estimating till datapoint     
+    if t < iDP 
 	dloglik = dloglik + dllik;
+    end
 	dscale = Scaling(dinvfisher, iscalingchoice);
 	vscaledsc(t) = dscale*dscore;
 end
@@ -37,6 +40,8 @@ if(idistribution == 0) %GAUSS
     dloglik = double((-log(2*pi)*(cT-imaxpq)/2 + dloglik)/cT);
 elseif(idistribution == 1) %STUD_T
     dloglik = double(dloglik/cT);
+elseif(idistribution == 99) %SKEWED STUDENT-T
+    
 end
 if(isfinite(dloglik) == 0 || isreal(dloglik) == 0 || sum(vB) > 1)
     dloglik = -100;
