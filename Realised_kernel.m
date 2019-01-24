@@ -1,8 +1,8 @@
-clear all
 clc
+%clear all 
 
 %get the values in the Excel using xlsread.
-table           = readtable('2007c.csv'); % Only one day now
+table           = readtable('2014c.csv'); 
 all_dates       = table2array(table(:,2));
 all_times       = table2array(table(:,3));
 all_prices      = table2array(table(:,4));
@@ -40,14 +40,14 @@ for d = 1 : number_of_days
     xi_2    = find_xi_2(log_prices,times, n); 
 
     bandwidth   = c_star * xi_2^(2/5) * n^(3/5);
-
+    
     p_cleaned   = zeros([n,1]); 
     unique_times= unique(times); 
 
     %remove multiple trades per second and replace by median
     for i = 1 : n 
        indices = find(unique_times(i)  == times);  
-       p_cleaned(i) = median(prices(indices(1):indices(end)));    
+       p_cleaned(i) = median(log_prices(indices(1):indices(end)));    
     end    
 
     X_0         = (p_cleaned(1) + p_cleaned(2)) / 2;
@@ -65,6 +65,5 @@ for d = 1 : number_of_days
        kernel_output = Parzen_kernel(kernel_input); 
 
        Realized_kernel(d) = Realized_kernel(d) + (kernel_output * gamma_h);
-       %TODO CHANGE TO PER DAY
     end    
 end
