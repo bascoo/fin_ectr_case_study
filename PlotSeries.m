@@ -1,4 +1,4 @@
-function [ts1, ts2, ts3] = PlotSeries(vp_mle, vinput, vy, cT)
+function [ts1, ts2, ts3, ts4, vfplot] = PlotSeries(vp_mle, vinput, vy, cT)
 ilinkfunction=vinput(2);
 [dloglik, vf, vscore, vscaledsc, vfunc] = LogLikelihoodGasVolaUniv(vp_mle, vinput, vy);
 if ilinkfunction == 2 %SIGMA

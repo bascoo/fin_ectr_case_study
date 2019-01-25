@@ -15,6 +15,9 @@ p                       = log(netflixPrice); % log price
 r                       = diff(p);           % log return 
 r_adjusted              = [0; r];   % first return = 0 so array sizes match
 
+%% Load Realized Kernel (Barndorff-Nielsen)
+load Daily_realized_kernel.mat
+
 %% Daily returns
 r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
 r_daily_close_to_close  = find_r_close_to_close(p, dates); 
@@ -85,8 +88,9 @@ end
 vTstat(:, all(~vTstat,1))=[];
 test = ["","beta","SE","T-stat"];
 vertcat(num2cell(test),horzcat(aparnames, num2cell(horzcat(vpplot, vse,vTstat))))
-[ts1, ts2, ts3]     = PlotSeries(vp_mle, vinput, vY, cT);
-
+[ts1, ts2, ts3, ts4, vfplot]     = PlotSeries(vp_mle, vinput, vY, cT);
+vEstVol = vfplot'; % vector estimated volatilities
+vCompare = horzcat(All_rk,vEstVol); % Put RK values and GAS values together
 toc
 
 
