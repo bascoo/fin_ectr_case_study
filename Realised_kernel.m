@@ -1,18 +1,16 @@
 clear all
 clc
+load('2007c')
+% table           = readtable('2007c.csv'); % Only one day now
+% all_dates       = table2array(table(:,2));
+% all_times       = table2array(table(:,3));
+% all_prices      = table2array(table(:,4));
+% clear table % remove burden on workspace
 
-%get the values in the Excel using xlsread.
-table           = readtable('2007c.csv'); % Only one day now
-all_dates       = table2array(table(:,2));
-all_times       = table2array(table(:,3));
-all_prices      = table2array(table(:,4));
-clear table % remove burden on workspace
-
-%% 
+%%
 
 number_of_days  = length(unique(all_dates));
-Realized_kernel = zeros([number_of_days,1]); % Initiate kernel:  TO DO array length #days
-
+% Realized_kernel = array(number_of_days; % Initiate kernel:  TO DO array length #days
 day_end_index = 0; % previous day ended at index 0 
 
     %% each day: 

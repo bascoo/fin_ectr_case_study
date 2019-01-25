@@ -74,14 +74,14 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 
 %% 1. Setup
 
-    x = (r_daily_open_to_close - mean(r_daily_open_to_close)*1000;
-    n = 500; %Look at last n variables
-    x = x(end-(n-1):end);
-%     percntiles = prctile(x,[5 95]); %5th and 95th percentile
-%     outlierIndex = x < percntiles(1) | x > percntiles(2);
-%     %remove outlier values
-%     x(outlierIndex) = [];
-    T = length(x); % sample size
+%     x = (r_daily_open_to_close - mean(r_daily_open_to_close)*1000;
+%     n = 500; %Look at last n variables
+%     x = x(end-(n-1):end);
+% %     percntiles = prctile(x,[5 95]); %5th and 95th percentile
+% %     outlierIndex = x < percntiles(1) | x > percntiles(2);
+% %     %remove outlier values
+% %     x(outlierIndex) = [];
+%     T = length(x); % sample size
 
 %% 2. Initializa options
 
