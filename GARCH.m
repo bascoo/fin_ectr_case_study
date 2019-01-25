@@ -140,16 +140,17 @@ par_RG
 %exitflag must be greater than 0.
 %% 3. Filter volatilities
 [sigG, sigRG] = filter_volatilities(x,par_G,par_RG);
-y = linspace(0,T,T);
-% y = (dates);
 
 figure()
-plot(y,x,'k')
+plot(x,'k')
 hold on
-plot(y,sigG(1:end-1), 'r')
+plot(sigG(1:end-1), 'r')
 hold on
-plot(y,sigRG(1:end-1), 'b')
+plot(sigRG(1:end-1), 'b')
 title('Filtered volatility');
+xlim([0 T])
+xticks(125:250:1875)
+xticklabels({'2007','2008','2009','2010','2011','2012','2013','2014'}) 
 legend('Stock returns','GARCH filter','Robust-GARCH filter')
 
 %% 2. Initialization options
