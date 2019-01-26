@@ -1,16 +1,16 @@
 clear all
 clc
-load('2007c')
-% table           = readtable('2007c.csv'); % Only one day now
-% all_dates       = table2array(table(:,2));
-% all_times       = table2array(table(:,3));
-% all_prices      = table2array(table(:,4));
-% clear table % remove burden on workspace
+
+table           = readtable('2014c.csv'); % Only one day now
+all_dates       = table2array(table(:,2));
+all_times       = table2array(table(:,3));
+all_prices      = table2array(table(:,4));
+clear table % remove burden on workspace
 
 %%
 
 number_of_days  = length(unique(all_dates));
-% Realized_kernel = array(number_of_days; % Initiate kernel:  TO DO array length #days
+Realized_kernel = zeros([number_of_days,1]); % Initiate kernel:  TO DO array length #days
 day_end_index = 0; % previous day ended at index 0 
 
     %% each day: 
@@ -45,7 +45,7 @@ for d = 1 : number_of_days
     %remove multiple trades per second and replace by median
     for i = 1 : n 
        indices = find(unique_times(i)  == times);  
-       p_cleaned(i) = median(prices(indices(1):indices(end)));    
+       p_cleaned(i) = median(log_prices(indices(1):indices(end)));    
     end    
 
     X_0         = (p_cleaned(1) + p_cleaned(2)) / 2;
@@ -63,6 +63,5 @@ for d = 1 : number_of_days
        kernel_output = Parzen_kernel(kernel_input); 
 
        Realized_kernel(d) = Realized_kernel(d) + (kernel_output * gamma_h);
-       %TODO CHANGE TO PER DAY
     end    
 end

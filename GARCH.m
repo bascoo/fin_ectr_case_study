@@ -6,10 +6,9 @@ format compact
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
 
-load('Daily_realized_kernel.mat');  % load realized kernel
+load('realized_kernel.csv');  % load realized kernel
 %load('datelist_all_trading_days.mat'); % stores 'Full_date_list'
 
-Realized_kernel = All_rk;           % Struct is saved as all_rk, store as Realized_kernel
 datetime        = char(table2array(table(:,1)));
 dates           = datetime(:,1:10);
 times           = datetime(:,11:19);
