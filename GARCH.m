@@ -1,12 +1,13 @@
 clear all
 clc
+format compact
 
 %% Load Data
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
 
 load('Daily_realized_kernel.mat');  % load realized kernel
-load('datelist_all_trading_days.mat'); % stores 'Full_date_list'
+%load('datelist_all_trading_days.mat'); % stores 'Full_date_list'
 
 Realized_kernel = All_rk;           % Struct is saved as all_rk, store as Realized_kernel
 datetime        = char(table2array(table(:,1)));
@@ -15,6 +16,7 @@ times           = datetime(:,11:19);
 dates           = char_to_string(dates);
 times           = char_to_string(times);
 netflixPrice    = table2array(table(:,2));
+dt              = table2array(table(:,1));
 clear table % reduce workspace burden
 
 %%
@@ -25,9 +27,17 @@ r_adjusted      = [0; r];            % first return = 0 so array sizes match
 mean_r          = mean(r);
 y               = r - mean_r;
 
-plot(p, 'b')
-hold on
-plot(r, 'r')
+figure()
+subplot(2,1,1)
+plot(dt,p, 'b')
+xlabel('Date')
+ylabel('Log price')
+title('Log prices of Netflix')
+subplot(2,1,2)
+plot(dt(2:end),r, 'r')
+xlabel('Date')
+ylabel('Log return')
+title('Log returns of Netflix')
 
 %% 0. Test For outliers (GRUBBS TEST, ASSUMES NORMAL DISTR)
 
@@ -89,67 +99,110 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 
 %% 1. Setup
 
-    x = (r_daily_open_to_close - mean(r_daily_open_to_close))*1000;
-    n = 500; %Look at last n variables
-    x = x(end-(n-1):end);
+    x = (r_daily_open_to_close - mean(r_daily_open_to_close))*100;
+    %n = 500; %Look at last n variables
+    %x = x(end-(n-1):end);
 %     percntiles = prctile(x,[5 95]); %5th and 95th percentile
 %     outlierIndex = x < percntiles(1) | x > percntiles(2);
 %     %remove outlier values
 %     x(outlierIndex) = [];
     T = length(x); % sample size
 
-%% 2. Initializa options
 
-    options = optimset('Display','iter',... %display iterations
-                         'TolFun',1e-9,... % function value convergence criteria
-                         'TolX',1e-9,... % argument convergence criteria
-                         'MaxIter',500); % maximum number of iterations
+                            %%
+%parameters for GARCH
+omega_ini = 0.1;
+alpha_ini = 0.2;
+beta_ini = 0.8;
+theta_ini1 = [omega_ini,alpha_ini,beta_ini];
+lb1=[0.0001,0,0];    % lower bound for theta
+ub1=[10,1,1];   % upper bound for theta
 
-%% 3. Initialize vars
+%Parameters for Garch with Leverage
+omega=0.1;
+alpha=0.05;
+beta = 0.9;
+delta  = -1;
+lambda = 15;
+rho = 1;
+theta_ini2 = [omega, alpha, beta, delta, lambda, rho];
+lb2=[0.0001,0,0, -10, 2,-10];    % lower bound for theta
+ub2=[10,1,1, 10, 30, 10];   % upper bound for theta
 
-    omega_ini   = 0.1;
-    alpha_ini   = 0.1;
-    beta_ini    = 0.98;
-    theta_ini   = [omega_ini, alpha_ini, beta_ini];
+%Estimate parameters
+[par_G, par_RG] = estimate_parameters(x, theta_ini1, lb1, ub1, theta_ini2, lb2, ub2);
 
-    lb = [-1, 0, 0];
-    ub = [10, 10, 1];
+display('parameter estimates:')
+display('omega, alpha, beta, loglikelihood/1000, exitflag')
+par_G
+display('omega, alpha, beta, delta, lambda, rho, loglikelihood/1000, exitflag')
+par_RG
+%exitflag must be greater than 0.
+%% 3. Filter volatilities
+[sigG, sigRG] = filter_volatilities(x,par_G,par_RG);
 
-    [theta_hat_normal_GARCH,llik_val_normal_GARCH,exitflag_normal_GARCH,~,~,~, normal_GARCH_hessian]=...
-          fmincon(@(theta) - llik_fun_GARCH(x,theta),theta_ini,[],[],[],[],lb,ub,[],options);
+figure()
+plot(x,'k')
+hold on
+plot(sigG(1:end-1), 'r')
+hold on
+plot(sigRG(1:end-1), 'b')
+title('Filtered volatility');
+xlim([0 T])
+xticks(125:250:1875)
+xticklabels({'2007','2008','2009','2010','2011','2012','2013','2014'}) 
+legend('Stock returns','GARCH filter','Robust-GARCH filter')
 
-    % TODO: Find std errors
+%% 2. Initialization options
+% 
+% options = optimset('Display','iter',... %display iterations
+%     'TolFun',1e-9,... % function value convergence criteria
+%     'TolX',1e-9,... % argument convergence criteria
+%     'MaxIter',500); % maximum number of iterations
+% 
+% %% 3. Initialize vars
+% 
+% omega_ini   = 0.1;
+% alpha_ini   = 0.05;
+% beta_ini    = 0.90;
+% theta_ini   = [omega_ini, alpha_ini, beta_ini];
+% 
+% lb = [-1, 0, 0];
+% ub = [10, 10, 1];
+% 
+% [theta_hat_normal_GARCH,llik_val_normal_GARCH,exitflag_normal_GARCH,~,~,~, normal_GARCH_hessian]=...
+%     fmincon(@(theta) - llik_fun_GARCH(x,theta),theta_ini,[],[],[],[],lb,ub,[],options);
+% 
+% %% 4. Display output
+% 
+%     display('parameter estimates:')
+%     theta_hat_normal_GARCH
+% 
+%     display('log likelihood value:')
+%     -llik_val_normal_GARCH*(length(x)-1)
+% 
+%     display('exit flag:')
+%     exitflag_normal_GARCH   %if exitflag>0: convergence ok
+%                             %if exitflag<=0: convergence failed
 
-%% 4. Display output
-
-    display('parameter estimates:')
-    theta_hat_normal_GARCH
-
-    display('log likelihood value:')
-    -llik_val_normal_GARCH*(length(x)-1)
-
-    display('exit flag:')
-    exitflag_normal_GARCH   %if exitflag>0: convergence ok
-                            %if exitflag<=0: convergence failed
-
-%% 5. Find filtered volatility
-
-    omega_hat   = theta_hat_normal_GARCH(1);
-    alpha_hat   = theta_hat_normal_GARCH(2);
-    beta_hat    = theta_hat_normal_GARCH(3);
-
-    filtered_sigma      = zeros([T,1]);
-    filtered_sigma(1)   = omega_hat / (1 - alpha_hat - beta_hat);
-
-    for i = 2 : T
-       filtered_sigma(i) = omega_hat + alpha_hat * x(i-1)^2 + beta_hat * filtered_sigma(i-1);
-    end
-
-%% 6. Plot
-
-    figure(3)
-
-    plot(filtered_sigma, 'r')
+% %% 5. Find filtered volatility
+% 
+%     omega_hat   = theta_hat_normal_GARCH(1);
+%     alpha_hat   = theta_hat_normal_GARCH(2);
+%     beta_hat    = theta_hat_normal_GARCH(3);
+% 
+%     filtered_sigma      = zeros([T,1]);
+%     filtered_sigma(1)   = omega_hat / (1 - alpha_hat - beta_hat);
+% 
+%     for i = 2 : T
+%        filtered_sigma(i) = omega_hat + alpha_hat * x(i-1)^2 + beta_hat * filtered_sigma(i-1);
+%     end
+% 
+% %% 6. Plot
+% 
+%     figure(3)
+% 
+%     plot(filtered_sigma, 'r')
 
 %% 3. Estimate values using ML
 
