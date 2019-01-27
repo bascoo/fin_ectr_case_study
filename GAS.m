@@ -19,6 +19,10 @@ r_adjusted              = [0; r];   % first return = 0 so array sizes match
 r_daily_open_to_close   = find_r_open_to_close(r_adjusted, dates); 
 r_daily_close_to_close  = find_r_close_to_close(p, dates); 
 
+%% Load Realized Kernel (Barndorff-Nielsen)
+loadkernel = csvread('realized_kernel.csv');
+All_rk = loadkernel(:,1);
+
 %% Input choices
 % #### Distribution
 GAUSS           = 0; % Gaussian
@@ -46,7 +50,7 @@ DailyData = 1;
         error('Specify daily data type');
     end
 %% Input datapoint (estimate coefficients till this point)
-iDatapoint  = 1500; % sample days 
+iDatapoint  = 2014; % sample days 
 
 %% Input choices
 iDistr      = STUD_T; % Gaussian distribution
@@ -63,7 +67,7 @@ dOmega      = 0;
 vA          = 0.10; 
 vB          = 0.89;
 dMu         = 0;
-dDf         = 5; % degrees of freedom, only relevant if distr = student-t
+dDf         = 3; % degrees of freedom, only relevant if distr = student-t
 
 %% Work
 cT                  = size(vY,2);
@@ -85,8 +89,9 @@ end
 vTstat(:, all(~vTstat,1))=[];
 test = ["","beta","SE","T-stat"];
 vertcat(num2cell(test),horzcat(aparnames, num2cell(horzcat(vpplot, vse,vTstat))))
-[ts1, ts2, ts3]     = PlotSeries(vp_mle, vinput, vY, cT);
-
+[ts1, ts2, ts3,ts4,vfplot]     = PlotSeries(vp_mle, vinput, vY, cT,All_rk);
+vEstVol = vfplot'; % Vector of estimated volatilities
+vCompare = horzcat(All_rk(:,1),vEstVol);
 toc
 
 
