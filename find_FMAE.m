@@ -4,6 +4,6 @@ function [result]=find_FMAE(forecasts, actual_obs)
     n = length(forecasts); 
     actual_obs = actual_obs(end-n+1: end); 
     
-    result = (abs(forecasts-actual_obs))/n; 
+    result = (sum(abs(forecasts-actual_obs)))/n; 
     result;
 end
