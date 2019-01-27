@@ -45,7 +45,7 @@ for d = 1 : number_of_days
     %remove multiple trades per second and replace by median
     for i = 1 : n 
        indices = find(unique_times(i)  == times);  
-       p_cleaned(i) = median(prices(indices(1):indices(end)));    
+       p_cleaned(i) = median(log_prices(indices(1):indices(end)));    
     end    
 
     X_0         = (p_cleaned(1) + p_cleaned(2)) / 2;
