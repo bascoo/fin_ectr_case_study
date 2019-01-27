@@ -1,4 +1,4 @@
-function PlotSeries(vp_mle, vinput, vy, cT)
+function [ts1,ts2,ts3,ts4,vfplot] = PlotSeries(vp_mle, vinput, vy, cT,all_rk)
 ilinkfunction=vinput(2);
 [dloglik, vf, vscore, vscaledsc, vfunc] = LogLikelihoodGasVolaUniv(vp_mle, vinput, vy);
 if ilinkfunction == 2 %SIGMA
@@ -7,7 +7,7 @@ else
     vfplot = sqrt(exp(vf));
 end
 
-subplot(3,1,1)
+%subplot(3,1,1)
 ts1 = timeseries(vfplot,1:cT);
 ts1.Name = 'Estimated volatility';
 ts1.TimeInfo.Units = 'weeks';
@@ -24,23 +24,25 @@ ts4.TimeInfo.Format = 'mmm dd, yy';
 ts4.Time=ts4.Time-ts4.Time(1);       
 plot(ts4)
 title('Continuously compounded return and estimated volatility')
+hold on
+plot(all_rk,'k')
 
-subplot(3,1,2)
+%subplot(3,1,2)
 ts2 = timeseries(vscore,1:cT);
 ts2.Name = 'Score';
 ts2.TimeInfo.Units = 'weeks';
 ts2.TimeInfo.StartDate = '03-Jan-2007'; 
 ts2.TimeInfo.Format = 'mmm dd, yy';   
 ts2.Time=ts2.Time-ts2.Time(1);      
-plot(ts2)
+%plot(ts2)
 
-subplot(3,1,3)
+%subplot(3,1,3)
 ts3 = timeseries(vscaledsc,1:cT);
 ts3.Name = 'Scaled score';
 ts3.TimeInfo.Units = 'weeks';
 ts3.TimeInfo.StartDate = '03-Jan-2007'; 
 ts3.TimeInfo.Format = 'mmm dd, yy';  
 ts3.Time=ts3.Time-ts3.Time(1);      
-plot(ts3)
+%plot(ts3)
 
 end
