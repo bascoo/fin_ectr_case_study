@@ -121,8 +121,18 @@ theta_ini2 = [omega, alpha, beta, delta, lambda, rho];
 lb2=[0.0001,0,0, -10, 2,-10];    % lower bound for theta
 ub2=[10,1,1, 10, 30, 10];   % upper bound for theta
 
+%pramaters for T GARCH
+omega_ini   = 0.1;
+alpha_ini   = 0.2;
+beta_ini    = 0.8;
+v_ini       = 3;
+theta_ini3  = [omega_ini,alpha_ini,beta_ini, v_ini];
+lb3         =[0.0001,0,0, 3];    % lower bound for theta
+ub3         =[10,1,1, 1000];   % upper bound for theta
+
+
 %Estimate parameters
-[par_G, par_RG] = estimate_parameters(x_training, theta_ini1, lb1, ub1, theta_ini2, lb2, ub2);
+[par_G, par_RG, par_TG] = estimate_parameters(x_training, theta_ini1, lb1, ub1, theta_ini2, lb2, ub2, theta_ini3, lb3, ub3);
 
 display('parameter estimates:')
 display('omega, alpha, beta, loglikelihood/1000, exitflag')
@@ -133,21 +143,34 @@ par_RG
 
 %%
 
-GARCH_forecast_RK = forecast_GARCH(par_G, x(1501:2014), realized_kernel(1501:2014));
-GARCH_FMSE_RK     = find_FMSE(GARCH_forecast_RK, realized_kernel);
-GARCH_FMAE_RK     = find_FMAE(GARCH_forecast_RK, realized_kernel);
+GARCH_forecast_RK           = forecast_GARCH(par_G, x(1501:2014), realized_kernel(1501:2014));
+GARCH_FMSE_RK               = find_FMSE(GARCH_forecast_RK, realized_kernel);
+GARCH_FMAE_RK               = find_FMAE(GARCH_forecast_RK, realized_kernel);
+
+T_GARCH_forecast_RK         = forecast_GARCH(par_TG, x(1501:2014), realized_kernel(1501:2014));
+T_GARCH_FMSE_RK             = find_FMSE(T_GARCH_forecast_RK, realized_kernel);
+T_GARCH_FMAE_RK             = find_FMAE(T_GARCH_forecast_RK, realized_kernel);
 
 Robust_GARCH_forecast_RK    = forecast_ROBUST_GARCH(par_RG, x(1501:2014), realized_kernel(1501:2014));
 Robust_GARCH_FMSE_RK        = find_FMSE(Robust_GARCH_forecast_RK, realized_kernel);
 Robust_GARCH_FMAE_RK        = find_FMAE(Robust_GARCH_forecast_RK, realized_kernel);
 
-GARCH_forecast_RV = forecast_GARCH(par_G, x(1501:2014), RV(1501:2014));
-GARCH_FMSE_RV     = find_FMSE(GARCH_forecast_RV, RV);
-GARCH_FMAE_RV     = find_FMAE(GARCH_forecast_RV, RV);
+GARCH_forecast_RV           = forecast_GARCH(par_G, x(1501:2014), RV(1501:2014));
+GARCH_FMSE_RV               = find_FMSE(GARCH_forecast_RV, RV);
+GARCH_FMAE_RV               = find_FMAE(GARCH_forecast_RV, RV);
+
+T_GARCH_forecast_RV         = forecast_GARCH(par_TG, x(1501:2014), RV(1501:2014));
+T_GARCH_FMSE_RV             = find_FMSE(T_GARCH_forecast_RK, RV);
+T_GARCH_FMAE_RV             = find_FMAE(T_GARCH_forecast_RK, RV);
 
 Robust_GARCH_forecast_RV    = forecast_ROBUST_GARCH(par_RG, x(1501:2014), RV(1501:2014));
 Robust_GARCH_FMSE_RV        = find_FMSE(Robust_GARCH_forecast_RV, RV);
 Robust_GARCH_FMAE_RV        = find_FMAE(Robust_GARCH_forecast_RV, RV);
+
+%% Find diebold-mariano test stat
+
+[DM_FMSE_nGARCHvsRobust_RK, DM_FMAE_nGARCHvsRobust_RK] = find_Diebold_Mariano_test_stat(GARCH_forecast_RK, Robust_GARCH_forecast_RK, realized_kernel)
+[DM_FMSE_nGARCHvsRobust_RV, DM_FMAE_nGARCHvsRobust_RV] = find_Diebold_Mariano_test_stat(GARCH_forecast_RV, Robust_GARCH_forecast_RV, RV)
 
 %% plot 
 
