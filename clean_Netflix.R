@@ -24,6 +24,7 @@ getPosix = function(x){
   #as.POSIXct(as.numeric(x['TIMESTAMP']),origin="1970-01-01", format="%m/%d/%Y %H:%M" )
 }
 
+#not used
 getStartStamp = function(x){
   date = x[1]
   time = "9:30:00"
@@ -34,12 +35,13 @@ getStartStamp = function(x){
   as.POSIXct(strptime(paste(date, time, sep = " "), "%Y-%m-%d %H:%M:%S"))
 }
 
+#not used
 getAllStartStamps = function(vDates){
   df = as.data.frame(vDates)
   apply(df, 1, getStartStamp)
 }
 
-
+#not used 
 getTimeframe = function(df){
     timeStamps = getAllStartStamps(unique(df$DATE))
     timeStamps = head(timeStamps,n=10)
@@ -56,6 +58,7 @@ getTimeframe = function(df){
     return(timeframe)
 }
 
+#not used
 getDayFrame = function(beginStamp){
   endStamp = beginStamp + 6.5 * 60 * 60
   return(seq(from = beginStamp, to = endStamp, by = 60*5))
