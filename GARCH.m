@@ -6,10 +6,9 @@ format compact
 %get the values in the Excel using xlsread.
 table           = readtable('netflix_resampled_5minutes.csv');
 
-load('Daily_realized_kernel.mat');  % load realized kernel
+load('realized_kernel.csv');  % load realized kernel
 %load('datelist_all_trading_days.mat'); % stores 'Full_date_list'
 
-Realized_kernel = All_rk;           % Struct is saved as all_rk, store as Realized_kernel
 datetime        = char(table2array(table(:,1)));
 dates           = datetime(:,1:10);
 times           = datetime(:,11:19);
@@ -88,7 +87,7 @@ end
 figure(2)
 plot(RV)
 hold on
-plot(Realized_kernel, 'r')
+plot(realized_kernel, 'r')
 axis tight
 ylim([0 0.025])
 
@@ -99,15 +98,8 @@ r_daily_close_to_close  = find_r_close_to_close(p, dates);
 
 %% 1. Setup
 
-    x = (r_daily_open_to_close - mean(r_daily_open_to_close))*100;
-    %n = 500; %Look at last n variables
-    %x = x(end-(n-1):end);
-%     percntiles = prctile(x,[5 95]); %5th and 95th percentile
-%     outlierIndex = x < percntiles(1) | x > percntiles(2);
-%     %remove outlier values
-%     x(outlierIndex) = [];
-    T = length(x); % sample size
-
+    x          = (r_daily_open_to_close - mean(r_daily_open_to_close));
+    x_training = x(1:1500); % use first 1500 obs for training, last 714 for forecasting
 
                             %%
 %parameters for GARCH
@@ -130,7 +122,7 @@ lb2=[0.0001,0,0, -10, 2,-10];    % lower bound for theta
 ub2=[10,1,1, 10, 30, 10];   % upper bound for theta
 
 %Estimate parameters
-[par_G, par_RG] = estimate_parameters(x, theta_ini1, lb1, ub1, theta_ini2, lb2, ub2);
+[par_G, par_RG] = estimate_parameters(x_training, theta_ini1, lb1, ub1, theta_ini2, lb2, ub2);
 
 display('parameter estimates:')
 display('omega, alpha, beta, loglikelihood/1000, exitflag')
@@ -138,177 +130,73 @@ par_G
 display('omega, alpha, beta, delta, lambda, rho, loglikelihood/1000, exitflag')
 par_RG
 %exitflag must be greater than 0.
-%% 3. Filter volatilities
-[sigG, sigRG] = filter_volatilities(x,par_G,par_RG);
+
+%%
+
+GARCH_forecast_RK = forecast_GARCH(par_G, x(1501:2014), realized_kernel(1501:2014));
+GARCH_FMSE_RK     = find_FMSE(GARCH_forecast_RK, realized_kernel);
+GARCH_FMAE_RK     = find_FMAE(GARCH_forecast_RK, realized_kernel);
+
+Robust_GARCH_forecast_RK    = forecast_ROBUST_GARCH(par_RG, x(1501:2014), realized_kernel(1501:2014));
+Robust_GARCH_FMSE_RK        = find_FMSE(Robust_GARCH_forecast_RK, realized_kernel);
+Robust_GARCH_FMAE_RK        = find_FMAE(Robust_GARCH_forecast_RK, realized_kernel);
+
+GARCH_forecast_RV = forecast_GARCH(par_G, x(1501:2014), RV(1501:2014));
+GARCH_FMSE_RV     = find_FMSE(GARCH_forecast_RV, RV);
+GARCH_FMAE_RV     = find_FMAE(GARCH_forecast_RV, RV);
+
+Robust_GARCH_forecast_RV    = forecast_ROBUST_GARCH(par_RG, x(1501:2014), RV(1501:2014));
+Robust_GARCH_FMSE_RV        = find_FMSE(Robust_GARCH_forecast_RV, RV);
+Robust_GARCH_FMAE_RV        = find_FMAE(Robust_GARCH_forecast_RV, RV);
+
+%% plot 
 
 figure()
-plot(x,'k')
+subplot(2,2,1);
+plot(realized_kernel(1501:2014), 'k')
 hold on
-plot(sigG(1:end-1), 'r')
+plot(GARCH_forecast_RK, 'r')
+axis tight
+title('GARCH RK forecast');
+legend('Realized volatility','Forecast')
+
+subplot(2,2,2);
+plot(realized_kernel(1501:2014), 'k')
 hold on
-plot(sigRG(1:end-1), 'b')
-title('Filtered volatility');
-xlim([0 T])
-xticks(125:250:1875)
-xticklabels({'2007','2008','2009','2010','2011','2012','2013','2014'}) 
-legend('Stock returns','GARCH filter','Robust-GARCH filter')
+plot(Robust_GARCH_forecast_RK, 'r')
+axis tight
+title('Robust GARCH RK forecast');
+legend('Realized kernel','Forecast')
 
-%% 2. Initialization options
-% 
-% options = optimset('Display','iter',... %display iterations
-%     'TolFun',1e-9,... % function value convergence criteria
-%     'TolX',1e-9,... % argument convergence criteria
-%     'MaxIter',500); % maximum number of iterations
-% 
-% %% 3. Initialize vars
-% 
-% omega_ini   = 0.1;
-% alpha_ini   = 0.05;
-% beta_ini    = 0.90;
-% theta_ini   = [omega_ini, alpha_ini, beta_ini];
-% 
-% lb = [-1, 0, 0];
-% ub = [10, 10, 1];
-% 
-% [theta_hat_normal_GARCH,llik_val_normal_GARCH,exitflag_normal_GARCH,~,~,~, normal_GARCH_hessian]=...
-%     fmincon(@(theta) - llik_fun_GARCH(x,theta),theta_ini,[],[],[],[],lb,ub,[],options);
-% 
-% %% 4. Display output
-% 
-%     display('parameter estimates:')
-%     theta_hat_normal_GARCH
-% 
-%     display('log likelihood value:')
-%     -llik_val_normal_GARCH*(length(x)-1)
-% 
-%     display('exit flag:')
-%     exitflag_normal_GARCH   %if exitflag>0: convergence ok
-%                             %if exitflag<=0: convergence failed
+subplot(2,2,3);
+plot(RV(1501:2014), 'k')
+hold on
+plot(GARCH_forecast_RV, 'r')
+axis tight
+title('GARCH RV forecast');
+legend('Realized volatility','Forecast')
+ylim([0 0.025])
 
-% %% 5. Find filtered volatility
-% 
-%     omega_hat   = theta_hat_normal_GARCH(1);
-%     alpha_hat   = theta_hat_normal_GARCH(2);
-%     beta_hat    = theta_hat_normal_GARCH(3);
-% 
-%     filtered_sigma      = zeros([T,1]);
-%     filtered_sigma(1)   = omega_hat / (1 - alpha_hat - beta_hat);
-% 
-%     for i = 2 : T
-%        filtered_sigma(i) = omega_hat + alpha_hat * x(i-1)^2 + beta_hat * filtered_sigma(i-1);
-%     end
-% 
-% %% 6. Plot
-% 
-%     figure(3)
-% 
-%     plot(filtered_sigma, 'r')
+subplot(2,2,4);
+plot(RV(1501:2014), 'k')
+hold on
+plot(Robust_GARCH_forecast_RV, 'r')
+axis tight
+title('Robust GARCH RV forecast');
+legend('Realized volatility','Forecast')
+ylim([0 0.025])
 
-%% 3. Estimate values using ML
-
-% %% 2. Parameter Values
-%
-%       omega=0.1;
-%       alpha=0.1;
-%       beta=0.98;
-%
-% %% 3. Define Vectors
-%
-%       sigma=zeros(1,T);
-%
-% %% 4. Filter Volatility
-%
-%       sigma(1)=var(x); %initialize volatility at unconditional variance
-%
-%       for t=1:T
-%
-%           sigma(t+1) = omega + alpha*x(t)^2 + beta*sigma(t);
-%
-%       end
-%
-% %% 5. Calculate Log Likelihood Values
-%
-%       %construct sequence of log lik contributions
-%       l = -(1/2)*log(2*pi) - (1/2)*log(sigma(1:T)) - (1/2)*(x').^2./sigma(1:T);
-%
-%       %calculate average log likelihood
-%       L = mean(l);
-%
-%
-% %% 6. Plots
+%% 3. Filter volatilities
+% [sigG, sigRG] = filter_volatilities(x,par_G,par_RG);
+% 
 % figure()
-% subplot(2,1,1)
-% plot(x,'k')      % plot data
+% plot(realized_kernel,'k')
 % hold on
-% plot(sigma,'r')    %plot filtered volatility
-% xlim([1 T])
-%
-% subplot(2,1,2)
-% plot(l)             %plot individual loglikelihood contributions
-% line([1 T], [L L])  %draw line of average log likelihood
-% xlim([1 T])
-
-
-% %% 1. Setup ML
-%
-% x = y*1000;
-%
-%
-%
-% x = x(1:5000);
-% %     %Look at last i variables
-% %     i = 500
-% %     x = x(end-i:end);
-%
-% %% 2. Optimization Options
-%
-%       options = optimset('Display','iter',... %display iterations
-%                          'TolFun',1e-12,... % function value convergence criteria
-%                          'TolX',1e-12,... % argument convergence criteria
-%                          'MaxIter',100); % maximum number of iterations
-%
-% %% 4. Initial Parameter Values
-%
-%       omega_ini = 0.1;% initial value for omega
-%       alpha_ini = 0.2;  % initial value for alpha
-%       beta_ini = 0.99;   % initial value for beta
-%
-%       theta_ini = [omega_ini,alpha_ini,beta_ini];
-%
-%
-% %% 5. Parameter Space Bounds
-%
-%       lb=[0.0001,0,0];    % lower bound for theta
-%       ub=[1000,100,1];   % upper bound for theta
-%
-%
-% %% 6. Optimize Log Likelihood Criterion
-%
-%       % fmincon input:
-%       % (1) negative log likelihood function: - llik_fun_AR1()
-%       % (2) initial parameter: theta_ini
-%       % (3) parameter space bounds: lb & ub
-%       % (4) optimization setup: options
-%       %  Note: a number of parameter restriction are left empty with []
-%
-%       % fmincon output:
-%       % (1) parameter estimates: theta_hat
-%       % (2) negative average log likelihood value at theta_hat: ls_val
-%       % (3) exit flag indicating (no) convergence: exitflag
-%
-%       [theta_hat,llik_val,exitflag]=...
-%           fmincon(@(theta) - llik_fun_GARCH(x,theta),theta_ini,[],[],[],[],lb,ub,[],options);
-%
-%
-%
-% %% 7. Print Output
-%
-% display('parameter estimates:')
-% theta_hat
-%
-% display('log likelihood value:')
-% -llik_val*(length(x)-1)
-%
-% display('exit flag:')
-% exitflag %if exitflag>0: convergence ok
-%          %if exitflag<=0: convergence failed
+% plot(sigG(1:end-1), 'r')
+% hold on
+% plot(sigRG(1:end-1), 'r')
+% title('Filtered volatility');
+% xlim([0 T])
+% xticks(125:250:1875)
+% xticklabels({'2007','2008','2009','2010','2011','2012','2013','2014'}) 
+% legend('Realized kernel','GARCH filter','Robust-GARCH filter')
