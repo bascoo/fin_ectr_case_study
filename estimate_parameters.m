@@ -44,9 +44,9 @@ parameters_T_Garch      = [theta_hat3, logLik3/1000, exitflag3];
 
 se_GARCH = est_SE(x, parameters_Garch(1:3), 0);
 se_RGARCH = est_SE(x,parameters_Robust_Garch(1:6), 1);
-%se_TGARCH = est_SE(x,parameters_T_GARCH, 0);
+se_TGARCH = est_SE(x,parameters_T_Garch, 2);
 
 se_GARCH
 se_RGARCH
-%se_TGARCH
+se_TGARCH
 end
